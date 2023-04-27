@@ -62,7 +62,7 @@ void InitDistanceSensor() {
 
 void GetDistance() {
   // wite stuff to initialize the sensor here
-    // Clears the trigPin
+  // Clears the trigPin
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
 
