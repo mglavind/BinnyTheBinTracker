@@ -16,16 +16,19 @@ float distanceCm;
 // End setup for Sensors
 
 
+
+
 // Begin setup for RFID
 
 #include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
 #include <SPI.h> //library responsible for communicating of SPI bus
-#define SS_PIN    5
-#define RST_PIN   22
-#define SIZE_BUFFER     18
-#define MAX_SIZE_BLOCK  16
-#define greenPin     12
-#define redPin       32
+
+int SS_PIN  =  5;
+int RST_PIN  = 22;
+int SIZE_BUFFER   =  18;
+int MAX_SIZE_BLOCK = 16;
+int greenPin =    12;
+int redPin   =    32;
 
 // End setup for  RFID
 
@@ -82,10 +85,14 @@ void GetDistance() {
 
 void ReadSensor2() {
   // wite stuff to initialize the sensor here
+
+
 }
 
 void ReadSensor3() {
   // wite stuff to initialize the sensor here
+
+
 }
 
   ////////////////////////////////////////
@@ -115,10 +122,6 @@ void LockA() {
 void LockB() {
   // wite stuff to initialize the wireless communication here
 }
-
-
-
-
 
 
 
