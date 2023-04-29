@@ -5,11 +5,25 @@ Husk at stage, committe og sync jeres bidrag til git!
 
 # Pinout
 
-| Pin Number | Function | Color |
-| --- | --- | --- |
-| 2 | Button Input | ![#00ff00](https://via.placeholder.com/15/00ff00/000000?text=+) Green |
-| 3 | LED Output | ![#ff0000](https://via.placeholder.com/15/ff0000/000000?text=+) Red |
-| 4 | Motor Control | ![#0000ff](https://via.placeholder.com/15/0000ff/000000?text=+) Blue |
+| Pin (Esp32)   | Function      | Module    |
+| ---           | ---           | --- |
+| 3.3v          | Voltage inout |  RFID, ultrasonic, Lora, LED's |
+| GND           | Ground        |  RFID, ultrasonic, Lora, LED's |
+| 5             | Button Input  |  RFID |
+| 12            | Trigger       |  Ultrasonic |
+| 13            | LED           |  Lora |
+| 14            | Echo          |  Ultrasonic |
+| 16            | RX            |  Lora |
+| 17            | TX            |  Lora |
+| 19            | MISO          |  RFID |
+| 21            | Reset         |  Lora |
+| 22            | Reset         |  RFID |
+| 23            | MOSI          |  RFID |
+| 27            | LED           |  Green LED |
+| 32            | LED           |  Red LED |
+
+
+
 
 
 

@@ -68,7 +68,7 @@ int RST_PIN  = 22;
 
 int SIZE_BUFFER   =  18;
 int MAX_SIZE_BLOCK = 16;
-int greenPin =    12;
+int greenPin =    27;
 int redPin   =    32;
 
 bool RemoveUID = false;
