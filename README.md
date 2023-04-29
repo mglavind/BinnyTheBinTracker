@@ -13,7 +13,7 @@ Husk at stage, committe og sync jeres bidrag til git!
 | 12            | Trigger       |  Ultrasonic |
 | 13            | LED           |  Lora |
 | 14            | Echo          |  Ultrasonic |
-| 16            | RX            |  Lora |
+| 16            | RX            |  <span style="color: green">Lora</span> |
 | 17            | TX            |  Lora |
 | 19            | MISO          |  RFID |
 | 21            | Reset         |  Lora |

@@ -81,8 +81,14 @@ byte uid[4] = {0x00, 0x00, 0x00, 0x00 };
 
 
 
-
-
+void StringToUID(String hexstring) {
+    hexstring.remove(0,2);
+    byte byteArray[4];
+    for (int i = 0; i < hexstring.length(); i += 2) {
+      uid[i/2] = (byte) strtol(hexstring.substring(i, i+2).c_str(), NULL, 16);
+    }
+    printUID(uid, 4);
+}
 
 // Function to print UID bytes in hexadecimal format
 void printUID(byte* uid, byte uidSize) {
@@ -92,18 +98,64 @@ void printUID(byte* uid, byte uidSize) {
         }
         Serial.print(uid[i], HEX);
         Serial.print(" ");
-
     }
+    Serial.println(" ");
 }
 
-void StringToUID(String hexstring) {
-    hexstring.remove(0,2);
-    byte byteArray[4];
-    for (int i = 0; i < hexstring.length(); i += 2) {
-      uid[i/2] = (byte) strtol(hexstring.substring(i, i+2).c_str(), NULL, 16);
+
+int findEmptyRow() {
+  for (int i = 0; i < 200; i++) {
+    bool emptyRow = true;
+    for (int j = 0; j < 4; j++) {
+      if (knownUIDs[i][j] != 0x00) {
+        emptyRow = false;
+        break;
+      }
     }
-    printUID(uid, 4);
+    if (emptyRow) {
+      return i;
+    }
+  }
+  return -1;  // No empty rows found
 }
+
+void addUID(byte uid[]) {
+  int emptyRow = findEmptyRow();
+  if (emptyRow >= 0) {
+    for (int i = 0; i < 4; i++) {
+      knownUIDs[emptyRow][i] = uid[i];
+    }
+    // Optional: print a message to confirm the UID was added
+    Serial.println("UID added to row " + String(emptyRow));
+  } else {
+    // Array is full, cannot add more UIDs
+    Serial.println("Error: array is full");
+  }
+}
+
+void ClearUID(byte uid[]) {
+  for (int i = 0; i < 200; i++) {
+    bool match = true;
+    for (int j = 0; j < 4; j++) {
+      if (knownUIDs[i][j] != uid[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      // Found a match, clear the row to indicate it is empty
+      for (int l = 0; l < 4; l++) {
+        knownUIDs[i][l] = 0x00;
+      }
+      // Optional: print a message to confirm the UID was cleared
+      Serial.println("UID cleared from row " + String(i));
+      return;
+    }
+  }
+  // UID not found in array
+  Serial.println("Error: UID not found");
+}
+
 
 
 void SetupRFID() {
@@ -416,14 +468,16 @@ if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
 // herefter skal vi tjekke om der er beskeder på Lora
 LoraMessage = myLora.getRx();
 Serial.println(LoraMessage); 
-  if (LoraMessage.startsWith("41")) {
+if (LoraMessage.startsWith("41")) {
   Serial.println("UID Now given access");
   StringToUID(LoraMessage);
+  addUID(uid);
   AddUID = true;
 }
 else if (LoraMessage.startsWith("52"))  {
   Serial.println("Removing UID: ");
   StringToUID(LoraMessage);
+  ClearUID(uid);
   RemoveUID = true;
 }
 else {
@@ -432,6 +486,7 @@ else {
 
 //////////////////////////////////////////////////////////////////////////////////////////// Fill Level
 // Her finder vi afstanden med ultrasinic sensoren, og sender den
+SendFillLevel = true;
 if (SendFillLevel) {
   Serial.println("Getting fill level");
   LoraTX(String(GetDistance()));
@@ -443,7 +498,6 @@ if (SendFillLevel) {
   //////////////////////////////////////////////////////////////////////////////////////////// EEPROM
   // Her gemmer vi vores KnownUIDs til EEPROM
   SaveUIDs(); 
-
 
 }
 
