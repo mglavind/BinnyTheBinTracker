@@ -380,7 +380,6 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200); // Starts the serial communication
 
-
   //////////////////////////////////////////////////////////////////////////////////////////// EEPROM
   // Initialize the EEPROM library
   EEPROM.begin(EEPROM_SIZE);
@@ -401,8 +400,9 @@ void setup() {
 
 void loop() {
 
-  // Her skal låsen aktiveres, hvis kortet er rigtigt
-  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) { 
+//////////////////////////////////////////////////////////////////////////////////////////// RFID
+// Her skal låsen aktiveres, hvis kortet er rigtigt
+if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) { 
   if (IsUIDKnown(mfrc522.uid.uidByte)){
     Serial.println("UID is known, give access");
   }
@@ -411,37 +411,40 @@ void loop() {
   }
 }
 
+  
+//////////////////////////////////////////////////////////////////////////////////////////// Lora
+// herefter skal vi tjekke om der er beskeder på Lora
+LoraMessage = myLora.getRx();
+Serial.println(LoraMessage); 
+  if (LoraMessage.startsWith("41")) {
+  Serial.println("UID Now given access");
+  StringToUID(LoraMessage);
+  AddUID = true;
+}
+else if (LoraMessage.startsWith("52"))  {
+  Serial.println("Removing UID: ");
+  StringToUID(LoraMessage);
+  RemoveUID = true;
+}
+else {
+  Serial.println("Got something else...");
+}
 
-  // herefter skal vi tjekke om der er beskeder på Lora
-
-  LoraMessage = myLora.getRx();
-  Serial.println(LoraMessage); 
-    if (LoraMessage.startsWith("41")) {
-    Serial.println("UID Now given access");
-    StringToUID(LoraMessage);
-    AddUID = true;
-  }
-  else if (LoraMessage.startsWith("52"))  {
-    Serial.println("Removing UID: ");
-    StringToUID(LoraMessage);
-    RemoveUID = true;
-  }
-  else {
-    Serial.println("Got something else...");
-  }
+//////////////////////////////////////////////////////////////////////////////////////////// Fill Level
+// Her finder vi afstanden med ultrasinic sensoren, og sender den
+if (SendFillLevel) {
+  Serial.println("Getting fill level");
+  LoraTX(String(GetDistance()));
+}
 
 
-  if (SendFillLevel) {
-    Serial.println("Getting fill level");
-    LoraTX(String(GetDistance()));
-  }
 
 
-  //////////////////////////////////////////////////////////////////////////////////////////// MQTT
+  //////////////////////////////////////////////////////////////////////////////////////////// EEPROM
+  // Her gemmer vi vores KnownUIDs til EEPROM
+  SaveUIDs(); 
 
-  //////////////////////////////////////////////////////////////////////////////////////////// MQTT
 
-  SaveUIDs();
 }
 
 
