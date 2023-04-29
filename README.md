@@ -3,9 +3,16 @@ Jeg har kaldt projektet for Binny, bare fordi skraldespands projektet lød for k
 
 Husk at stage, committe og sync jeres bidrag til git!
 
-Teste test test?
+# Pinout
 
-Yo yo
+| Pin Number | Function | Color |
+| --- | --- | --- |
+| 2 | Button Input | ![#00ff00](https://via.placeholder.com/15/00ff00/000000?text=+) Green |
+| 3 | LED Output | ![#ff0000](https://via.placeholder.com/15/ff0000/000000?text=+) Red |
+| 4 | Motor Control | ![#0000ff](https://via.placeholder.com/15/0000ff/000000?text=+) Blue |
+
+
+
 
 ## Working With RFID
 
