@@ -127,12 +127,15 @@ void led_off()
 
 // the setup routine runs once when you press reset:
 void setup() {
+
+
+  // Open serial communications and wait for port to open:
+  Serial.begin(57600);
+
   // LED pin is GPIO2 which is the ESP8266's built in LED
   pinMode(LED_pin, OUTPUT);
   led_on();
 
-  // Open serial communications and wait for port to open:
-  Serial.begin(57600);
   mySerial.begin(57600);
 
   delay(1000); //wait for the arduino ide's serial console to open

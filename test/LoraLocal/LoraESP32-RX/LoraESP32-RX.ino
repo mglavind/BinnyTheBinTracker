@@ -121,6 +121,7 @@ void loop() {
   Serial.println("waiting for a message");
   Serial2.println("radio rx 0"); //wait for 60 seconds to receive
   str = Serial2.readStringUntil('\n');
+
   Serial.println(str);
   delay(20);
   if ( str.indexOf("ok") == 0 )
@@ -134,6 +135,8 @@ void loop() {
     {
       toggle_led();
       Serial.println(str); //printing received data   
+      String byteString = "0A1B2C3D";
+
       if (str.length()>9){
         LastMessage = str; 
       }
