@@ -1,4 +1,5 @@
 // Author: Lasse F. Olsen, s153593
+#include <Arduino.h>
 
 const int trigPin = 12;
 const int echoPin = 14;
