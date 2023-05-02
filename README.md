@@ -9,7 +9,7 @@ Husk at stage, committe og sync jeres bidrag til git!
 | ---           | ---           | --- |
 | 3.3v          | Voltage inout |  RFID, ultrasonic, Lora, LED's |
 | GND           | Ground        |  RFID, ultrasonic, Lora, LED's |
-| 5             | Button Input  |  RFID |
+| 15            | ss            |  RFID |
 | 12            | Trigger       |  Ultrasonic |
 | 13            | LED           |  Lora |
 | 14            | Echo          |  Ultrasonic |
@@ -17,10 +17,10 @@ Husk at stage, committe og sync jeres bidrag til git!
 | 17            | TX            |  Lora |
 | 19            | MISO          |  RFID |
 | 21            | Reset         |  Lora |
-| 22            | Reset         |  RFID |
+| 32            | Reset         |  RFID |
 | 23            | MOSI          |  RFID |
 | 27            | LED           |  Green LED |
-| 32            | LED           |  Red LED |
+| 33            | LED           |  Red LED |
 
 
 

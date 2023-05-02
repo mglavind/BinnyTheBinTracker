@@ -3,7 +3,21 @@
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 
-long timeToSleep = 1000*60; // Timer interval in milliseconds
+long timeToSleep = 1000*60*2; // Timer interval in milliseconds
+long timeToSend = 1000*30;
+long timeToRecieve = 1000*30;
+
+bool SendViaLora = false;
+bool BeginRecieveing = false;
+
+
+unsigned long previousLoraRXMillis = 0;
+unsigned long previousLoraTXMillis = 0;
+unsigned long previousSleepMillis = 0;
+unsigned long previousLEDMillis = 0;
+
+
+
 
 
 
@@ -19,7 +33,7 @@ long timeToSleep = 1000*60; // Timer interval in milliseconds
 //   https://randomnerdtutorials.com/esp32-deep-sleep-arduino-ide-wake-up-sources/
 // Lav evt en interrupt også
 #define uS_TO_S_FACTOR 1000000  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  5        /* Time ESP32 will go to sleep (in seconds) */
+#define TIME_TO_SLEEP  60*3        /* Time ESP32 will go to sleep (in seconds) */
 
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -104,6 +118,7 @@ byte knownUIDs[NUM_UIDS][UID_SIZE] = {  // List of known UIDs
 };
 
 void SaveUIDs() {
+  Serial.println("Saving to eeprom");
   // Write the UID array to EEPROM
   for (int i = 0; i < NUM_UIDS; i++) {
     for (int j = 0; j < UID_SIZE; j++) {
@@ -116,6 +131,7 @@ void SaveUIDs() {
 }
 
 void LoadUIDs() {
+  Serial.println("Reading from eeprom");
   // Read the UID array from EEPROM
   for (int i = 0; i < NUM_UIDS; i++) {
     for (int j = 0; j < UID_SIZE; j++) {
@@ -140,32 +156,52 @@ void LoadUIDs() {
 #include <MFRC522.h> //library responsible for communicating with the module RFID-RC522
 #include <SPI.h> //library responsible for communicating of SPI bus
 
-int SS_PIN  =  5;
-int RST_PIN  = 22;
+const int SS_PIN  =  15;
+const int RST_PIN  = 32;
 
 int SIZE_BUFFER   =  18;
 int MAX_SIZE_BLOCK = 16;
-int greenPin =    27;
-int redPin   =    32;
+const int greenPin =    27;
+const int redPin   =    33;
+
+
 
 bool RemoveUID = false;
 bool AddUID = false;
+
+
+
+
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 MFRC522::MIFARE_Key key;
 
 byte uid[4] = {0x00, 0x00, 0x00, 0x00 };
+long LEDOnTime = 1000*3;
 
+void SetupRFID() {
+  Serial.println("Setting Up RFID");
+  SPI.begin();             // Initialize SPI bus
+  mfrc522.PCD_Init();      // Initialize MFRC522
+  pinMode(greenPin, OUTPUT);
+  pinMode(redPin, OUTPUT);
 
-
-void StringToUID(String hexstring) {
-    hexstring.remove(0,2);
-    byte byteArray[4];
-    for (int i = 0; i < hexstring.length(); i += 2) {
-      uid[i/2] = (byte) strtol(hexstring.substring(i, i+2).c_str(), NULL, 16);
-    }
-    printUID(uid, 4);
+  Serial.println("done");
 }
+
+
+void GreenLEDOn() {
+  digitalWrite(greenPin, 1);
+  previousLEDMillis = currentMillis;
+}
+
+void RedLEDOn() {
+  digitalWrite(redPin, 1);
+  previousLEDMillis = currentMillis;
+}
+
+
 
 // Function to print UID bytes in hexadecimal format
 void printUID(byte* uid, byte uidSize) {
@@ -179,12 +215,23 @@ void printUID(byte* uid, byte uidSize) {
     Serial.println(" ");
 }
 
+void StringToUID(String hexstring) {
+    hexstring.remove(0,2);
+    byte byteArray[4];
+    for (int i = 0; i < hexstring.length(); i += 2) {
+      uid[i/2] = (byte) strtol(hexstring.substring(i, i+2).c_str(), NULL, 16);
+    }
+    printUID(uid, 4);
+}
+
+
+
 
 int findEmptyRow() {
   for (int i = 0; i < 200; i++) {
     bool emptyRow = true;
     for (int j = 0; j < 4; j++) {
-      if (knownUIDs[i][j] != 0x00) {
+      if (knownUIDs[i][j] != 0xFF) {
         emptyRow = false;
         break;
       }
@@ -197,6 +244,7 @@ int findEmptyRow() {
 }
 
 void addUID(byte uid[]) {
+  LoadUIDs();
   int emptyRow = findEmptyRow();
   if (emptyRow >= 0) {
     for (int i = 0; i < 4; i++) {
@@ -208,9 +256,11 @@ void addUID(byte uid[]) {
     // Array is full, cannot add more UIDs
     Serial.println("Error: array is full");
   }
+  SaveUIDs();
 }
 
 void ClearUID(byte uid[]) {
+  LoadUIDs();
   for (int i = 0; i < 200; i++) {
     bool match = true;
     for (int j = 0; j < 4; j++) {
@@ -222,7 +272,7 @@ void ClearUID(byte uid[]) {
     if (match) {
       // Found a match, clear the row to indicate it is empty
       for (int l = 0; l < 4; l++) {
-        knownUIDs[i][l] = 0x00;
+        knownUIDs[i][l] = 0xFF;
       }
       // Optional: print a message to confirm the UID was cleared
       Serial.println("UID cleared from row " + String(i));
@@ -231,14 +281,12 @@ void ClearUID(byte uid[]) {
   }
   // UID not found in array
   Serial.println("Error: UID not found");
+  SaveUIDs();
 }
 
 
 
-void SetupRFID() {
-    SPI.begin();             // Initialize SPI bus
-    mfrc522.PCD_Init();      // Initialize MFRC522
-}
+
 
 bool IsUIDKnown(byte uid[]) {
   for (int i = 0; i < 200; i++) {
@@ -256,6 +304,7 @@ bool IsUIDKnown(byte uid[]) {
   }
   // UID not found in array
   return false;
+  
 }
 
   //////////////////////////////////////
@@ -343,6 +392,8 @@ void ReadSensor3() {
 #define RXD2 16
 #define TXD2 17
 
+bool LoraIsSetup = false;
+
 HardwareSerial mySerial(1); // RX, TX !! labels on relay board is swapped !!
 
 //create an instance of the rn2xx3 library,
@@ -351,9 +402,9 @@ HardwareSerial mySerial(1); // RX, TX !! labels on relay board is swapped !!
 rn2xx3 myLora(mySerial);
 
 #define addr "00D9DE45"
-#define AppEUI "BE7A000000001465"
-#define DevEUI "0004A30B00FE1D3F"
-#define AppKey "B3C35A08F02D8D3988076D655BDD5B75"
+#define AppEUI "BE7A000000001553"
+#define DevEUI "0004A30B00F212AF"
+#define AppKey "8DCEC7252D9C96883D2D6BDBD695B23C"
 #define DataRate 0
 
 String LoraMessage = "";
@@ -452,11 +503,13 @@ void LoraSetup() {
   myLora.tx("Markus's ESP32 er online");
 
   led_off();
+  LoraIsSetup = true;
 }
 
 void LoraTX(String TXmsg) {
   // wite stuff to initialize the wireless communication here
   led_on();
+  RedLEDOn();
   Serial.println(myLora.getSNR());
   Serial.print("TXing: ");
   Serial.println(TXmsg);
@@ -508,24 +561,34 @@ void LockB() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200); // Starts the serial communication
+  delay(100);
 
   //////////////////////////////////////////////////////////////////////////////////////////// EEPROM
   // Initialize the EEPROM library
+  Serial.println("Initiating EEPROM");
   EEPROM.begin(EEPROM_SIZE);
 
   // Load the UID array from EEPROM
   LoadUIDs();
 
   //////////////////////////////////////////////////////////////////////////////////////////// DistanceSensor
+  Serial.println("Initiating distance sensor");
   InitDistanceSensor();
 
   //////////////////////////////////////////////////////////////////////////////////////////// RFID
   SetupRFID();
+
+  digitalWrite(redPin, 0);
+  digitalWrite(greenPin, 0);
   
   //////////////////////////////////////////////////////////////////////////////////////////// Wireless
-  LoraSetup();
   
+byte *thirdRow = knownUIDs[100];
+ for (int i = 0; i < 4; i++) {
+  Serial.println(thirdRow[i]);
+}
   //////////////////////////////////////////////////////////////////////////////////////////// DeepSleep
+  Serial.println("Initiating DeepSleep");
   SetupSleepMode();
 
 }
@@ -538,61 +601,119 @@ currentMillis = millis();
 if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) { 
   if (IsUIDKnown(mfrc522.uid.uidByte)){
     Serial.println("UID is known, give access");
+    GreenLEDOn();
   }
   else {
     Serial.println("UID is unknown");
+    RedLEDOn();
   }
 }
 
-  
+
 //////////////////////////////////////////////////////////////////////////////////////////// Lora
 // herefter skal vi tjekke om der er beskeder på Lora
-LoraMessage = myLora.getRx();
-Serial.println(LoraMessage); 
-if (LoraMessage.startsWith("41")) {
-  Serial.println("UID Now given access");
-  StringToUID(LoraMessage);
-  addUID(uid);
-  AddUID = true;
-}
-else if (LoraMessage.startsWith("52"))  {
-  Serial.println("Removing UID: ");
-  StringToUID(LoraMessage);
-  ClearUID(uid);
-  RemoveUID = true;
-}
-else {
-  Serial.println("Got something else...");
+
+if (BeginRecieveing) {
+  if (!LoraIsSetup) {
+    LoraSetup();
+  }
+
+  LoraMessage = myLora.getRx();
+  Serial.println(LoraMessage); 
+  if (LoraMessage.startsWith("41")) {
+    Serial.println("UID Now given access");
+    StringToUID(LoraMessage);
+    addUID(uid);
+    AddUID = true;
+    
+  }
+  else if (LoraMessage.startsWith("52"))  {
+    Serial.println("Removing UID: ");
+    StringToUID(LoraMessage);
+    ClearUID(uid);
+    RemoveUID = true;
+  }
+  else if (LoraMessage.isEmpty())  {
+    Serial.println("Nothing recieved");
+  }
+  else {
+    Serial.println("Got noghtin");
+  }
+
+
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////// Fill Level
-// Her finder vi afstanden med ultrasinic sensoren, og sender den
-SendFillLevel = true;
-if (SendFillLevel) {
+
+
+
+
+/*
+Mail til fiskomaten@gmail.com
+
+kasser til trækasse 30x30x30
+
+
+
+
+*/
+
+
+//////////////////////////////////////////////////////////////////////////////////////////// Timers
+
+if (currentMillis - previousLoraRXMillis >= timeToRecieve) {
+  SendViaLora = true; // This way, GoToSleep can be triggered other places too.
+  Serial.println("I should check for lora messages");
+  BeginRecieveing = true;
+  previousLoraRXMillis = currentMillis;
+}
+
+
+
+if (currentMillis - previousLoraTXMillis >= timeToSend) {
+  SendViaLora = true; // This way, GoToSleep can be triggered other places too.
+
+  Serial.println("I should send something via lora");
   Serial.println("Getting fill level");
-  LoraTX(String(GetDistance()));
+
+  for (byte i = 0; i < 9; i++) {
+    distanceCm = + GetDistance();
+  }
+  distanceCm = distanceCm/10;
+  LoraTX(String(distanceCm));
+  SendFillLevel = false; // Turning it off again
+
+  SendFillLevel = true;
+  previousLoraTXMillis = currentMillis;
 }
 
-
-
-
-  //////////////////////////////////////////////////////////////////////////////////////////// EEPROM
-  // Her gemmer vi vores KnownUIDs til EEPROM
-  SaveUIDs(); 
-
-if (currentMillis - previousMillis >= timeToSleep) {
+if (currentMillis - previousSleepMillis >= timeToSleep) {
   GoToSleep = true; // This way, GoToSleep can be triggered other places too.
+  Serial.println("I should go to sleep now");
+  previousSleepMillis = currentMillis;
 }
+delay(20);
+
+/*
+if (currentMillis - previousLEDMillis >= LEDOnTime) {
+  digitalWrite(greenPin, 0);
+  digitalWrite(redPin, 0);
+}
+*/
+
+
+
 
 if(GoToSleep) {
+
+
+
+
   Serial.println("Going to sleep now");
   delay(1000);
   Serial.flush(); 
   esp_deep_sleep_start();
   Serial.println("This will never be printed"); 
 }
-  
-
 
 
 }
