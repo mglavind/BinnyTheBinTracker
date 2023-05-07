@@ -3,7 +3,7 @@
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 
-// long timeToSleep = 1000*60*2; // Timer interval in milliseconds
+long timeToSleep = 1000*60*2; // Timer interval in milliseconds
 long timeToSend = 1000*30;
 long timeToRecieve = 1000*30;
 
@@ -37,46 +37,46 @@ unsigned long previousLEDMillis = 0;
 
 RTC_DATA_ATTR int bootCount = 0;
 
-// bool GoToSleep = false;
+bool GoToSleep = false;
 
 
 /*
 Method to print the reason by which ESP32
 has been awaken from sleep
 */
-// void print_wakeup_reason(){
-//   esp_sleep_wakeup_cause_t wakeup_reason;
+void print_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
 
-//   wakeup_reason = esp_sleep_get_wakeup_cause();
+  wakeup_reason = esp_sleep_get_wakeup_cause();
 
-//   switch(wakeup_reason)
-//   {
-//     case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
-//     case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
-//     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
-//     case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
-//     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
-//     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
-//   }
-// }
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
 
 
-// void SetupSleepMode() {
-//     //Increment boot number and print it every reboot
-//   ++bootCount;
-//   Serial.println("Boot number: " + String(bootCount));
+void SetupSleepMode() {
+    //Increment boot number and print it every reboot
+  ++bootCount;
+  Serial.println("Boot number: " + String(bootCount));
 
-//   //Print the wakeup reason for ESP32
-//   print_wakeup_reason();
+  //Print the wakeup reason for ESP32
+  print_wakeup_reason();
 
-//   /*
-//   First we configure the wake up source
-//   We set our ESP32 to wake up every 5 seconds
-//   */
-//   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
-//   Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +
-//   " Seconds");
-// }
+  /*
+  First we configure the wake up source
+  We set our ESP32 to wake up every 5 seconds
+  */
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  Serial.println("Setup ESP32 to sleep for every " + String(TIME_TO_SLEEP) +
+  " Seconds");
+}
 
   //////////////////////////////////////
  ///////////* Deep sleep */////////////
@@ -439,7 +439,7 @@ void initialize_radio()
   {
     Serial.println("Communication with RN2xx3 unsuccessful. Power cycle the board.");
     Serial.println(hweui);
-    delay(1000); // Was 1000 but set to 1000 to make it more speedy
+    delay(10000);
     hweui = myLora.hweui();
   }
 
@@ -479,7 +479,7 @@ void initialize_radio()
 
   while(!join_result){
     Serial.println("Unable to join. Are your keys correct, and do you have Cibicom coverage?");
-    delay(60000); //delay a minute before retry
+    delay(10000); //delay a minute before retry
     join_result = myLora.init();
   }
   Serial.println("Successfully joined Cibicom");
@@ -587,10 +587,9 @@ void setup() {
   for (int i = 0; i < 4; i++) {
     Serial.println(thirdRow[i]);
   }
-  //////////////////////////////////////////////////////////////////////////////////////////// DeepSleep
-  // Serial.println("Initiating DeepSleep");
-  // SetupSleepMode();
-
+    //////////////////////////////////////////////////////////////////////////////////////////// DeepSleep
+  Serial.println("Initiating DeepSleep");
+  SetupSleepMode();
 }
 
 void loop() {
@@ -634,28 +633,14 @@ void loop() {
       RemoveUID = true;
     }
     else if (LoraMessage.isEmpty())  {
-      // Serial.println("Nothing recieved");
+      Serial.println("Nothing recieved");
     }
     else {
-      Serial.println("Got nothing");
+      Serial.println("Got noghtin");
     }
 
 
   }
-
-
-
-
-
-  /*
-  Mail til fiskomaten@gmail.com
-
-  kasser til trækasse 30x30x30
-
-
-
-
-  */
 
 
   //////////////////////////////////////////////////////////////////////////////////////////// Timers
@@ -686,29 +671,25 @@ void loop() {
     previousLoraTXMillis = currentMillis;
   }
 
-  // if (currentMillis - previousSleepMillis >= timeToSleep) {
-  //   GoToSleep = true; // This way, GoToSleep can be triggered other places too.
-  //   Serial.println("I should go to sleep now");
-  //   previousSleepMillis = currentMillis;
-  // }
+  if (currentMillis - previousSleepMillis >= timeToSleep) {
+    GoToSleep = true; // This way, GoToSleep can be triggered other places too.
+    Serial.println("I should go to sleep now");
+    previousSleepMillis = currentMillis;
+  }
   delay(20);
 
-  /*
+  
   if (currentMillis - previousLEDMillis >= LEDOnTime) {
     digitalWrite(greenPin, 0);
     digitalWrite(redPin, 0);
-}
-*/
+  }
+  
 
-
-
-
-// if(GoToSleep) {
-//   Serial.println("Going to sleep now");
-//   delay(1000);
-//   Serial.flush(); 
-//   esp_deep_sleep_start();
-//   Serial.println("This will never be printed"); 
-// }
-
+  if(GoToSleep) {
+    Serial.println("Going to sleep now");
+    delay(1000);
+    Serial.flush(); 
+    esp_deep_sleep_start();
+    Serial.println("This will never be printed"); 
+  }
 }
