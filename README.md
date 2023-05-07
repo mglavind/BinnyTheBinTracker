@@ -1,7 +1,11 @@
 # BinnyTheBinTracker
-Jeg har kaldt projektet for Binny, bare fordi skraldespands projektet lød for kedeligt
+34346 Networking technologies and application development for Internet of Things (IoT) Spring 23 at DTU.
 
-Husk at stage, committe og sync jeres bidrag til git!
+## Webpage for the interaction with the unit
+[Binnythebintracker - UI](http://binnythebintracker.com:1880/ui)
+
+## Webpage with the NodeRed code
+[Binnythebintracker - NodeRed](http://binnythebintracker.com:1880/)
 
 # Pinout
 
@@ -13,19 +17,14 @@ Husk at stage, committe og sync jeres bidrag til git!
 | 12            | Trigger       |  Ultrasonic |
 | 13            | LED           |  Lora |
 | 14            | Echo          |  Ultrasonic |
-| 16            | RX            |  <span style="color: green">Lora</span> |
-| 17            | TX            |  Lora |
+| 16            | RX            |  LoRa |
+| 17            | TX            |  LoRa |
 | 19            | MISO          |  RFID |
 | 21            | Reset         |  Lora |
 | 32            | Reset         |  RFID |
 | 23            | MOSI          |  RFID |
 | 27            | LED           |  Green LED |
 | 33            | LED           |  Red LED |
-
-
-
-
-
 
 
 ## Working With RFID
